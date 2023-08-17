@@ -1,9 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:control_gastos1/bar%20graph/bar_graph.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+//Importaciones Firebase
+import 'package:firebase_core/firebase_core.dart';
+import 'firebase_options.dart';
+import 'package:control_gastos1/services/firebase_service.dart';
 
-void main() {
-  runApp(const MyApp());
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await Firebase.initializeApp(
+    options: DefaultFirebaseOptions.currentPlatform,
+  );
+  runApp(MyApp());
 }
 
 class MyApp extends StatelessWidget {
