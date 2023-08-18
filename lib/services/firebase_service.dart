@@ -14,9 +14,10 @@ Future<List> getDatos() async {
   //QuerySnapshot representa el resultado de una consulta a la base de datos.
   QuerySnapshot queryExpenses = await expenses.get();
 
-  queryExpenses.docs.forEach((element) {
+  for (var element in queryExpenses.docs) {
     datos.add(element);
-  });
+  }
+  Future.delayed(const Duration(seconds: 2));
 
   return datos;
 }

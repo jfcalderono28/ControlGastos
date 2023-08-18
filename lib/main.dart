@@ -11,31 +11,31 @@ void main() async {
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
-  runApp(MyApp());
+  runApp(const MyApp());
 }
 
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
 
-  // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
     return const MaterialApp(
-      home: MyHomePage(title: 'Flutter Demo Home Page'),
+      title: 'Material App',
+      home: Home(),
     );
   }
 }
 
-class MyHomePage extends StatefulWidget {
-  const MyHomePage({super.key, required this.title});
-
-  final String title;
+class Home extends StatefulWidget {
+  const Home({
+    super.key,
+  });
 
   @override
-  State<MyHomePage> createState() => _MyHomePageState();
+  State<Home> createState() => _HomeState();
 }
 
-class _MyHomePageState extends State<MyHomePage> {
+class _HomeState extends State<Home> {
   List<double> weeklySummary = [
     4500.0,
     15000.0,
@@ -67,6 +67,7 @@ class _MyHomePageState extends State<MyHomePage> {
     return SafeArea(
       child: Column(
         children: [
+          _search(),
           _selector(),
           _expenses(),
           Container(
@@ -102,6 +103,29 @@ class _MyHomePageState extends State<MyHomePage> {
       child: Text(
         name,
         style: index == currentPage ? selected : unselected,
+      ),
+    );
+  }
+
+  Widget _search() {
+    return SizedBox(
+      height: 50.0,
+      child: FutureBuilder(
+        future: getDatos(),
+        builder: (context, snapshot) {
+          if (snapshot.hasData) {
+            return ListView.builder(
+              itemCount: snapshot.data?.length,
+              itemBuilder: (context, index) {
+                return Text((snapshot.data?[index]["category"]).toString());
+              },
+            );
+          } else {
+            return const Center(
+              child: CircularProgressIndicator(),
+            );
+          }
+        },
       ),
     );
   }
