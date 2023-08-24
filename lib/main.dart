@@ -1,10 +1,10 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:control_gastos1/month_widget.dart';
 import 'package:flutter/material.dart';
-import 'package:control_gastos1/bar%20graph/bar_graph.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 //Importaciones Firebase
 import 'package:firebase_core/firebase_core.dart';
 import 'firebase_options.dart';
-import 'package:control_gastos1/services/firebase_service.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -36,21 +36,17 @@ class Home extends StatefulWidget {
 }
 
 class _HomeState extends State<Home> {
-  List<double> weeklySummary = [
-    4500.0,
-    15000.0,
-    0.0,
-    25000.0,
-    7500.0,
-    3250.0,
-    11500.0
-  ];
   late PageController _controller;
-  int currentPage = 9;
+  int currentPage = 8;
+  Stream<QuerySnapshot>? _query;
 
   @override
   void initState() {
     super.initState();
+    _query = FirebaseFirestore.instance
+        .collection("expenses")
+        .where("month", isEqualTo: currentPage)
+        .snapshots();
 
     _controller =
         PageController(initialPage: currentPage, viewportFraction: 0.33);
@@ -65,23 +61,22 @@ class _HomeState extends State<Home> {
 
   Widget _body() {
     return SafeArea(
-      child: Column(
-        children: [
-          _search(),
-          _selector(),
-          _expenses(),
-          Container(
-            color: Colors.grey[300],
-            height: 8.0,
-          ),
-          _graph(),
-          Container(
-            color: Colors.grey[300],
-            height: 8.0,
-          ),
-          _list(),
-        ],
-      ),
+      child: Column(children: [
+        _selector(),
+        StreamBuilder<QuerySnapshot>(
+          stream: _query,
+          builder: (context, AsyncSnapshot data) {
+            if (data.hasData) {
+              return MonthWidget(
+                documents: data.data.docs,
+              );
+            }
+            return const Center(
+              child: CircularProgressIndicator(),
+            );
+          },
+        )
+      ]),
     );
   }
 
@@ -107,36 +102,40 @@ class _HomeState extends State<Home> {
     );
   }
 
-  Widget _search() {
-    return SizedBox(
-      height: 50.0,
-      child: FutureBuilder(
-        future: getDatos(),
-        builder: (context, snapshot) {
-          if (snapshot.hasData) {
-            return ListView.builder(
-              itemCount: snapshot.data?.length,
-              itemBuilder: (context, index) {
-                return Text((snapshot.data?[index]["category"]).toString());
-              },
-            );
-          } else {
-            return const Center(
-              child: CircularProgressIndicator(),
-            );
-          }
-        },
-      ),
-    );
-  }
+  // Widget _search() {
+  //   return SizedBox(
+  //     height: 50.0,
+  //     child: FutureBuilder(
+  //       future: getDatos(),
+  //       builder: (context, snapshot) {
+  //         if (snapshot.hasData) {
+  //           return ListView.builder(
+  //             itemCount: snapshot.data?.length,
+  //             itemBuilder: (context, index) {
+  //               return Text((snapshot.data?[index]["category"]).toString());
+  //             },
+  //           );
+  //         } else {
+  //           return const Center(
+  //             child: CircularProgressIndicator(),
+  //           );
+  //         }
+  //       },
+  //     ),
+  //   );
+  // }
 
   Widget _selector() {
     return SizedBox.fromSize(
-      size: const Size.fromHeight(40.0),
+      size: const Size.fromHeight(70.0),
       child: PageView(
         onPageChanged: (newPage) {
           setState(() {
             currentPage = newPage;
+            _query = FirebaseFirestore.instance
+                .collection('expenses')
+                .where("month", isEqualTo: currentPage + 1)
+                .snapshots();
           });
         },
         controller: _controller,
@@ -156,63 +155,6 @@ class _HomeState extends State<Home> {
         ],
       ),
     );
-  }
-
-  Widget _expenses() {
-    return const Column(
-      children: [
-        Text(
-          "4123",
-          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 25.0),
-        ),
-        Text("Total expenses")
-      ],
-    );
-  }
-
-  Widget _graph() {
-    return SizedBox(
-        height: 300, child: MyBarGraph(weeklySummary: weeklySummary));
-  }
-
-  Widget _item(IconData icono, String name, int percente, double value) {
-    return ListTile(
-      leading: Icon(
-        icono,
-        size: 40,
-      ),
-      title: Text(
-        name,
-        style: const TextStyle(fontWeight: FontWeight.bold),
-      ),
-      subtitle: Text("$percente% of expenses"),
-      trailing: Container(
-          decoration: const BoxDecoration(
-              color: Color.fromARGB(255, 112, 159, 240),
-              borderRadius: BorderRadius.all(Radius.circular(5))),
-          child: Padding(
-            padding: const EdgeInsets.all(6.0),
-            child: Text(
-              "\$ $value",
-              style: const TextStyle(fontWeight: FontWeight.bold),
-            ),
-          )),
-    );
-  }
-
-  Widget _list() {
-    return Expanded(
-        child: ListView.separated(
-      itemCount: 15,
-      itemBuilder: (BuildContext context, index) =>
-          _item(FontAwesomeIcons.shop, "Shooping", 14, 4550.0),
-      separatorBuilder: (context, index) {
-        return Container(
-          color: Colors.grey[300],
-          height: 8.0,
-        );
-      },
-    ));
   }
 
   @override
