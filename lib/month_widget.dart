@@ -10,7 +10,7 @@ class MonthWidget extends StatefulWidget {
   final List<double> perDay;
   MonthWidget({Key? key, required this.documents})
       : total = documents.map((doc) => doc['value']).fold(0.0, (a, b) => a + b),
-        perDay = List.generate(30, (int index) {
+        perDay = List.generate(15, (int index) {
           return documents
               .where((doc) => doc['day'] == (index + 1))
               .map((doc) => doc['value'])
@@ -39,10 +39,13 @@ class _MonthWidgetState extends State<MonthWidget> {
       child: Column(
         children: [
           _expenses(),
-          _graph(),
+          Row(
+            mainAxisSize: MainAxisSize.max,
+            children: [Expanded(child: _graph())],
+          ),
           Container(
             color: Colors.blueAccent,
-            height: 24.0,
+            height: 4.0,
           ),
           _list()
         ],
@@ -63,8 +66,7 @@ class _MonthWidgetState extends State<MonthWidget> {
   }
 
   Widget _graph() {
-    return SizedBox(
-        height: 300, child: MyBarGraph(weeklySummary: weeklySummary));
+    return SizedBox(height: 300, child: MyBarGraph(data: widget.perDay));
   }
 
   Widget _item(IconData icono, String name, int percente, double value) {
